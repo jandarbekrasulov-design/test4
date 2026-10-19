@@ -1,32 +1,32 @@
-const url = "https://dummyjson.com/recipes";
+const url = "https://dummyjson.com/products";
 const list = document.querySelector("#list");
 const form = document.querySelector("#form");
 const input = document.querySelector("#name");
 const message = document.querySelector("#message");
 
-function render(recipe) {
+function render(product) {
   const card = document.createElement("article");
   const image = document.createElement("img");
-  if (recipe.image) image.src = recipe.image;
-  image.alt = recipe.name || "Изображение рецепта";
+  if (product.thumbnail) image.src = product.thumbnail;
+  image.alt = product.title || "Изображение товара";
 
   const title = document.createElement("h2");
-  title.textContent = recipe.name;
-  const cuisine = document.createElement("p");
-  cuisine.textContent = recipe.cuisine || "Кухня не указана";
+  title.textContent = product.title;
+  const price = document.createElement("p");
+  price.textContent = product.price == null ? "Цена не указана" : `$${product.price}`;
   const button = document.createElement("button");
   button.textContent = "Удалить";
   button.onclick = async () => {
     try {
-      const response = await fetch(`${url}/${recipe.id}`, { method: "DELETE" });
+      const response = await fetch(`${url}/${product.id}`, { method: "DELETE" });
       if (!response.ok) throw new Error();
       card.remove();
     } catch {
-      message.textContent = "Не удалось удалить рецепт.";
+      message.textContent = "Не удалось удалить товар.";
     }
   };
 
-  card.append(image, title, cuisine, button);
+  card.append(image, title, price, button);
   list.append(card);
 }
 
@@ -35,14 +35,14 @@ fetch(url)
     if (!response.ok) throw new Error();
     return response.json();
   })
-  .then(data => data.recipes.forEach(render))
-  .catch(() => { message.textContent = "Не удалось загрузить рецепты."; });
+  .then(data => data.products.forEach(render))
+  .catch(() => { message.textContent = "Не удалось загрузить товары."; });
 
 form.onsubmit = async event => {
   event.preventDefault();
-  const name = input.value.trim();
-  if (!name) {
-    message.textContent = "Введите название рецепта.";
+  const title = input.value.trim();
+  if (!title) {
+    message.textContent = "Введите название товара.";
     return;
   }
 
@@ -50,14 +50,14 @@ form.onsubmit = async event => {
     const response = await fetch(`${url}/add`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name }),
+      body: JSON.stringify({ title, price: 0 }),
     });
     if (!response.ok) throw new Error();
-    const recipe = await response.json();
-    render({ ...recipe, name: recipe.name || name });
+    const product = await response.json();
+    render({ ...product, title: product.title || title });
     input.value = "";
     message.textContent = "";
   } catch {
-    message.textContent = "Не удалось добавить рецепт.";
+    message.textContent = "Не удалось добавить товар.";
   }
 };
